@@ -1,0 +1,26 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Unsloth-generated cache (not source)
+unsloth_compiled_cache/
+
+# Training outputs: LoRA adapters + checkpoints (large binaries, reproducible via train.py)
+outputs/
+
+# Large / intermediate dataset artifacts (generation is resumable and reproducible via scripts/)
+data/generated_raw.jsonl
+data/.generated_done.txt
+data/.generated_done.txt.bak
+
+# HuggingFace / model download cache, if it ends up local to the repo
+.cache/
+
+# OS noise
+.DS_Store
+
+# Editor swap files
+*.swp
