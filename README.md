@@ -1,195 +1,162 @@
-# Cybersecurity LLM — Fine-Tuning Walkthrough
+# Cybersecurity LLM
 
-A do-it-yourself guide to fine-tuning an open model into a specialized
-cybersecurity assistant (offensive/CTF, blue team, threat intel, education),
-running locally on a single 8 GB GPU.
+Fine-tuning Qwen2.5-3B-Instruct into a local cybersecurity assistant with
+QLoRA on a single 8 GB laptop GPU, trained on a 928-example dataset built with
+an LLM synthetic-data and curation pipeline.
 
-## Target hardware (this machine)
+- **Model:** `unsloth/Qwen2.5-3B-Instruct`, 4-bit base + LoRA adapters (r=16)
+- **Hardware:** RTX 5060 Laptop, 8 GB VRAM, Blackwell (sm_120)
+- **Data:** 110 hand-written examples scaled to 928 curated examples
+- **Domains:** security education, blue team, threat intel, offensive/CTF
 
-| Resource | Value | Implication |
-|---|---|---|
-| GPU | RTX 5060 Laptop, **8 GB VRAM**, Blackwell (sm_120) | QLoRA only; needs CUDA 12.8+ builds |
-| RAM | 15 GB | fine for data prep / offload |
-| Disk | ~940 GB free | plenty |
-| CPU | 16 cores | fine |
+## Example
 
-**Approach:** QLoRA (4-bit base + small trainable LoRA adapters). Full
-fine-tuning is not possible on 8 GB.
+A training example from the blue-team domain:
 
-**Honest expectations:** fine-tuning gives strong *domain adaptation* —
-security fluency, tool/format knowledge, consistent style, offline use. It
-shines at education/Q&A, threat-intel summarization, and blue-team format
-generation (Sigma/YARA/SIEM). Deep offensive *reasoning* stays the weakest
-area for small models; RAG over a CVE/knowledge base helps more there than
-fine-tuning does.
+> **User:** Write a Sigma rule to detect a Windows process spawning
+> powershell.exe with an encoded command.
+>
+> **Assistant:** Here is a Sigma rule for encoded PowerShell execution:
+>
+> ```yaml
+> title: PowerShell EncodedCommand Execution
+> status: experimental
+> logsource:
+>   product: windows
+>   category: process_creation
+> detection:
+>   selection_img:
+>     Image|endswith: '\powershell.exe'
+>   selection_flag:
+>     CommandLine|contains:
+>       - ' -enc '
+>       - ' -EncodedCommand '
+>       - ' -e '
+>   condition: selection_img and selection_flag
+> falsepositives:
+>   - Legitimate admin scripts and software installers using encoded commands
+> level: medium
+> ```
+>
+> Notes: tune false positives by baselining known-good encoded commands in
+> your environment; pair with decoding the base64 payload during triage to
+> confirm intent.
 
----
-
-## Pipeline overview
+## How it works
 
 ```
-environment  →  dataset  →  QLoRA train  →  evaluate  →  export to Ollama
+data/seed.jsonl ──► scripts/generate.py ──► scripts/curate.py ──► train.py ──► chat.py
+110 hand-written     Claude few-shot          validate, dedupe,     QLoRA on      interactive
+examples             across 118 topics        balance -> 928 rows   8 GB GPU      local chat
 ```
 
-Get the environment **provably working** (load a model + run one training
-step) before touching datasets.
+1. **Seed set.** 110 hand-written examples across four domains, all sharing
+   one system prompt that scopes the assistant to authorized testing, CTFs,
+   and education.
+2. **Topic taxonomy** (`scripts/taxonomy.py`). Generating "1,000 examples" in
+   one go produces near-duplicates, so generation runs per topic instead:
+   118 topics weighted toward the target domain mix. Threat-intel topics name
+   real CVEs and MITRE ATT&CK techniques so facts are grounded in specific
+   entities rather than invented.
+3. **Synthetic generation** (`scripts/generate.py`). For each topic, Claude
+   Haiku 4.5 is shown three real seed examples from the same domain and asked
+   for several distinct Q&A pairs. Runs are resumable: finished topics are
+   checkpointed, so an interrupted run restarts without repeating API calls.
+4. **Curation** (`scripts/curate.py`). Every generated row is checked for the
+   exact message structure and system prompt, answer length (400 to 6,000
+   characters), and near-duplicate questions (normalized text, similarity
+   ratio of 0.85 or higher against everything already kept, including the
+   seed set). The script reports the final domain balance against the target.
+5. **Training** (`train.py`). QLoRA with Unsloth and TRL's `SFTTrainer`.
+6. **Chat** (`chat.py`). Loads the base model plus the trained adapter for an
+   interactive session.
 
----
+## Dataset
 
-## Phase 1 — Environment (do first)
+| Domain | Rows | Share | Target | Example content |
+|---|---:|---:|---:|---|
+| Education | 313 | 34% | 35% | how attacks and defenses work |
+| Blue team | 258 | 28% | 25% | Sigma/YARA rules, log analysis, incident response |
+| Threat intel | 221 | 24% | 25% | CVE and ATT&CK summaries, detection |
+| Offensive/CTF | 136 | 15% | 15% | methodology and tooling, framed with detection and mitigation |
+| **Total** | **928** | | | |
 
-Two landmines on this machine:
-- **Python 3.13 is too new** for parts of the ML stack (bitsandbytes, triton,
-  unsloth) → use **Python 3.11**.
-- **Blackwell GPU (sm_120)** needs the **cu128** PyTorch build, or you get
-  `no kernel image is available for execution on the device` at runtime.
+Format: chat JSONL, one object per line with a `domain` tag and a `messages`
+list (system, user, assistant).
 
-### 1.1 Python 3.11 via uv
+## Training setup
+
+| Setting | Value |
+|---|---|
+| Base model | Qwen2.5-3B-Instruct, 4-bit |
+| LoRA | r=16, alpha=16, all attention and MLP projections |
+| Sequence length | 1,536 tokens, with packing |
+| Batch | 1 x 8 gradient accumulation (effective 8) |
+| Optimizer | AdamW 8-bit, lr 2e-4, cosine schedule |
+| Epochs | 2 |
+| Precision | bf16, Unsloth gradient checkpointing |
+
+### Getting it to run on Blackwell
+
+Most of the environment work was making a brand-new GPU architecture work
+with the ML stack:
+
+- **Python 3.11, not 3.13.** bitsandbytes, triton, and Unsloth did not yet
+  support 3.13.
+- **CUDA 12.8 PyTorch build.** The default build lacks sm_120 kernels and
+  fails at runtime with `no kernel image is available for execution on the
+  device`.
+- **No torch reinstalls.** Unsloth's metadata does not list torch 2.11, so a
+  normal install silently downgrades torch. Unsloth is installed with
+  `--no-deps` and its dependencies added separately.
+- **Manual chat template.** `apply_chat_template` in transformers 5.x fails on
+  Qwen's template here, so the scripts render the `<|im_start|>` format
+  themselves (`render()` in `train.py` and `chat.py`).
+
+## Results
+
+- A first QLoRA run on the 96-row seed set trained successfully: the model
+  picked up the target answer style and structure, but factual recall was
+  weak at that data size. This motivated scaling the dataset to 928 rows.
+- Retraining on the 928-row set and a held-out evaluation of base vs.
+  fine-tuned are in progress. Scores will be added here.
+
+## Quickstart
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-# restart shell, or: source $HOME/.local/bin/env
+uv venv --python 3.11 .venv && source .venv/bin/activate
 
-cd /home/amirs/programming/Dev/cybersec_agent
-uv venv --python 3.11 .venv
-source .venv/bin/activate
-python --version    # must say 3.11.x
-```
-
-> Alternative: `sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt install python3.11 python3.11-venv`, then `python3.11 -m venv .venv`.
-
-### 1.2 PyTorch with Blackwell (cu128) support
-
-Install torch BEFORE unsloth so you control the build:
-
-```bash
+# order matters on RTX 50-series GPUs
 uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+uv pip install --no-deps unsloth unsloth_zoo
+uv pip install -r requirements.txt
+
+python verifygpu.py                 # CUDA available, sm_120, GPU matmul works
+python smoketest.py                 # load the 4-bit model and attach LoRA
+
+export ANTHROPIC_API_KEY=...        # only needed for generation
+python scripts/generate.py          # writes data/generated_raw.jsonl
+python scripts/curate.py            # writes data/seed_scaled.jsonl
+
+python train.py                     # adapter saved to outputs/cybersec-lora
+python chat.py                      # chat with the fine-tuned model
 ```
 
-### 1.3 VERIFY the GPU (do not skip)
+The full step-by-step environment guide, including troubleshooting, is in
+[docs/walkthrough.md](docs/walkthrough.md).
 
-```bash
-python - <<'PY'
-import torch
-print("torch:", torch.__version__)
-print("cuda available:", torch.cuda.is_available())
-print("device:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "NONE")
-print("capability:", torch.cuda.get_device_capability(0) if torch.cuda.is_available() else "NONE")
-x = torch.randn(1000, 1000, device="cuda")
-y = (x @ x).sum().item()
-print("GPU matmul OK, result is finite:", y == y)
-PY
-```
+## Responsible use
 
-Expected: `cuda available: True`, device `RTX 5060 Laptop GPU`, capability
-`(12, 0)`, `GPU matmul OK: True`.
+Every example uses a system prompt that scopes the assistant to authorized
+security testing, CTFs, and education. Offensive content explains concepts,
+methodology, and detection and mitigation rather than turnkey attacks against
+real targets. Synthetic data can still contain errors, and threat-intel rows
+in particular should be fact-checked; do not rely on the model's output
+without verification.
 
-Troubleshooting:
-- `no kernel image` → wrong torch build; reinstall with the cu128 index URL.
-- `cuda available: False` → WSL2 not seeing GPU; run `nvidia-smi` in WSL, and
-  update the **Windows** NVIDIA driver (WSL CUDA comes from the Windows driver).
+## Roadmap
 
-### 1.4 Unsloth + load-a-model smoke test
-
-```bash
-uv pip install unsloth
-```
-
-```python
-from unsloth import FastLanguageModel
-model, tok = FastLanguageModel.from_pretrained(
-    "unsloth/Qwen2.5-3B-Instruct", max_seq_length=2048, load_in_4bit=True)
-# then generate one sentence to confirm it works
-```
-
-Loads under ~5–6 GB and generates → environment is done.
-
----
-
-## Phase 2 — Dataset
-
-The dataset determines model quality far more than any hyperparameter. For
-QLoRA, **quality and consistency beat raw volume** — a few thousand clean,
-well-formatted examples outperform 100k noisy ones.
-
-### 2.1 Format: chat JSONL
-
-One JSON object per line. Each has a `messages` list (system / user /
-assistant). This is the standard SFT format.
-
-```json
-{"messages": [
-  {"role": "system", "content": "You are a cybersecurity assistant for authorized security testing and education."},
-  {"role": "user", "content": "What is a SQL injection and how do I prevent it?"},
-  {"role": "assistant", "content": "SQL injection is ... To prevent it: 1) parameterized queries ..."}
-]}
-```
-
-We render each example to plain text in Qwen's `<|im_start|>` format
-**ourselves** (the `transformers 5.x` chat-template engine is buggy on this
-machine — see Phase 1.4), so the pipeline doesn't depend on
-`apply_chat_template`.
-
-### 2.2 The ethics / authorization frame
-
-Every example — especially offensive ones — uses a system prompt that scopes
-the assistant to **authorized testing, CTFs, and education**. Offensive answers
-should explain concepts, methodology, and detection/mitigation, not hand over
-turnkey attacks against real targets. This keeps the model useful for learning
-and defense without training it to be a no-questions weapon.
-
-### 2.3 Strategy: seed set first, then scale
-
-1. **Hand-write a small seed set (~30–50 examples)** spanning the 4 domains.
-   Purpose: validate the *training* pipeline end-to-end on real data before
-   investing in curation.
-2. **Scale with curated public data** (HuggingFace security instruction
-   datasets, CVE/MITRE ATT&CK text, write-ups) + optional synthetic generation.
-3. **Decontaminate**: keep an eval set separate; remove any training rows that
-   overlap it.
-4. **Deduplicate** near-identical rows.
-
-### 2.4 Domain mix (rough target)
-
-| Domain | Share | Example content |
-|---|---|---|
-| Education / Q&A | 35% | concept explanations, "how does X work" |
-| Threat intel | 25% | CVE/ATT&CK summarization, report analysis |
-| Blue team | 25% | Sigma/YARA rules, log analysis, IR steps |
-| Offensive/CTF | 15% | methodology, tool usage, CTF reasoning (scoped) |
-
-### 2.5 Quality rules
-
-- Consistent assistant voice and structure.
-- Correct, specific answers (no hallucinated CVE numbers/commands).
-- Vary phrasing of questions so the model generalizes.
-- Keep examples within `max_seq_length` (1024–2048 tokens).
-
-## Phase 3 — QLoRA training
-
-Unsloth training script. Start with the 3B (model is a config value, swappable
-to 7B later). batch size 1–2, gradient accumulation, `max_seq_length`
-1024–2048, gradient checkpointing.
-
-## Phase 4 — Evaluation
-
-Held-out questions per domain + spot checks.
-
-## Phase 5 — Export to Ollama
-
-Merge adapter → GGUF → `ollama create` → local `cybersec` model, offline.
-
----
-
-## Progress
-
-- [x] 1.1 Python 3.11 venv
-- [x] 1.2 PyTorch cu128
-- [x] 1.3 GPU verification passes
-- [x] 1.4 Unsloth + smoke test (Qwen2.5-3B, 2.4 GB, LoRA attached)
-- [x] Phase 2 — dataset: 110 hand-written rows, audited + domain-tagged
-- [ ] Phase 2b — scale to 1-2k via scripts/ (generate.py + curate.py)
-- [x] Phase 3 — first QLoRA run (works; style learned, facts weak on 96 rows)
-- [ ] Phase 3b — retrain on scaled dataset
-- [ ] Phase 4 — eval
-- [ ] Phase 5 — export
+- [ ] Retrain on the 928-row dataset
+- [ ] Held-out evaluation set per domain; score base vs. fine-tuned
+- [ ] Merge the adapter, convert to GGUF, and run it locally with Ollama
+- [ ] Try a 7B base model
