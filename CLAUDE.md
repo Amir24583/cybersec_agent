@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A QLoRA fine-tuning project that turns an open instruct model (default
 `unsloth/Qwen2.5-3B-Instruct`) into a specialized cybersecurity assistant
 covering four domains: offensive/CTF, blue team, threat intel, and
-education/Q&A. The end goal is a local model exported to Ollama. `README.md`
+education/Q&A. The end goal is a local model exported to Ollama. `docs/walkthrough.md`
 holds the full phase-by-phase walkthrough and a progress checklist.
 
 ## Hardware constraints (these drive every technical decision)

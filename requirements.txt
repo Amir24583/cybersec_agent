@@ -1,0 +1,16 @@
+# Install order matters on Blackwell (RTX 50-series) GPUs. See README "Quickstart".
+#   1. uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+#   2. uv pip install --no-deps unsloth unsloth_zoo
+#   3. uv pip install -r requirements.txt
+# torch and unsloth are left out on purpose: a normal install downgrades torch
+# and breaks the cu128 build.
+transformers
+datasets
+accelerate
+peft
+trl
+bitsandbytes
+sentencepiece
+protobuf
+hf_transfer
+anthropic
