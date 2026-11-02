@@ -2,12 +2,13 @@
 
 Reads data/seed.jsonl, renders each row to Qwen's <|im_start|> chat format
 ourselves (the transformers-5 chat-template engine is buggy here), and trains
-LoRA adapters on a 4-bit base. Tuned for an 8 GB GPU.
+LoRA adapters on a 4-bit base. Tuned for an 8 GB GPU; also runs on cloud GPUs
+such as Colab's T4 (see notebooks/train_colab.ipynb).
 """
 import json
 import torch
 from datasets import Dataset
-from unsloth import FastLanguageModel
+from unsloth import FastLanguageModel, is_bfloat16_supported
 from trl import SFTConfig, SFTTrainer
 
 # ---- config -----------------------------------------------------------------
@@ -56,7 +57,8 @@ trainer = SFTTrainer(
         warmup_steps=5,
         lr_scheduler_type="cosine",
         optim="adamw_8bit",
-        bf16=True,
+        bf16=is_bfloat16_supported(),    # T4 and older GPUs lack bf16 -> fp16
+        fp16=not is_bfloat16_supported(),
         logging_steps=1,
         save_strategy="epoch",
         seed=42,
