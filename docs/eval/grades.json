@@ -1,0 +1,1038 @@
+[
+ {
+  "id": "education-01",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    1,
+    0
+   ],
+   "acc": 2,
+   "err": "Describes it as overloading the MFA system rather than tricking the user into approving"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    0,
+    0,
+    1,
+    1
+   ],
+   "acc": 3,
+   "err": "Says no password is needed; calls push more secure than other factors"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "education-02",
+  "base": {
+   "kp": [
+    1,
+    1,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Claims the TPM signs bootloaders and stores a motherboard UUID; no measured boot"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    0,
+    0,
+    1,
+    0
+   ],
+   "acc": 2,
+   "err": "Claims the TPM signs bootloaders and blocks execution"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "education-03",
+  "base": {
+   "kp": [
+    0,
+    1,
+    0,
+    0,
+    1
+   ],
+   "acc": 2,
+   "err": "Says x86 only; invents an Intel 'SEGCCP' instruction"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    1,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Calls branch target injection a mitigation; vague on the cache channel"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "education-04",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "acc": 2,
+   "err": "Says the password is sent in the request"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    1,
+    0
+   ],
+   "acc": 2,
+   "err": "Starts with a TGS request; 32-bit keys, public keys, forward secrecy, 10-30 minute tickets are all wrong"
+  },
+  "preferred": "tie"
+ },
+ {
+  "id": "education-05",
+  "base": {
+   "kp": [
+    1,
+    1,
+    0,
+    1,
+    0
+   ],
+   "acc": 4,
+   "err": "Shows a DKIM DNS record as the message header; no alignment"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    1,
+    0,
+    1,
+    0
+   ],
+   "acc": 3,
+   "err": "SPF failure always rejects; spoofing requires compromising DNS; no alignment"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "education-06",
+  "base": {
+   "kp": [
+    0,
+    1,
+    1,
+    0,
+    1
+   ],
+   "acc": 3,
+   "err": "Describes ROAs as neighbor authorizations"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "acc": 3,
+   "err": "Says MD5 session auth stops forged routes; no RPKI"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "education-07",
+  "base": {
+   "kp": [
+    0,
+    0,
+    1,
+    0,
+    1
+   ],
+   "acc": 3,
+   "err": "Examples use accented Latin letters, not other scripts"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    1,
+    0,
+    1
+   ],
+   "acc": 1,
+   "err": "Gives typosquats (googl3) as homoglyphs; DNSSEC as a defense; .uk as suspicious"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "education-08",
+  "base": {
+   "kp": [
+    0,
+    1,
+    1,
+    1,
+    0
+   ],
+   "acc": 3,
+   "err": "Garbled example; no Dynamic ARP Inspection"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    1,
+    1,
+    0
+   ],
+   "acc": 2,
+   "err": "Reverses the IP/MAC mapping; DHCP snooping and proxy ARP described wrongly"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "education-09",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Passkey described as a passphrase; CA-signed device keys; no origin binding"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Browser encrypts with the server's public key; passkeys described as per-session tokens"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "education-10",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Describes loops; meaningless config"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Invents a MAC-based mechanism; port-security config does not address VLAN hopping"
+  },
+  "preferred": "tie"
+ },
+ {
+  "id": "blue_team-01",
+  "base": {
+   "kp": [
+    1,
+    0,
+    0,
+    1,
+    0
+   ],
+   "acc": 2,
+   "err": "Invents nasl:check_version keyword"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "acc": 1,
+   "err": "Not valid Suricata syntax; CSP advice nonsense"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "blue_team-02",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Describes AS-REP roasting as KDC DoS"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Describes it as flooding; invented timing signals"
+  },
+  "preferred": "tie"
+ },
+ {
+  "id": "blue_team-03",
+  "base": {
+   "kp": [
+    0,
+    0,
+    1,
+    0
+   ],
+   "acc": 1,
+   "err": "Wrong bytes, ELF rule, degenerate repetition"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    1,
+    1
+   ],
+   "acc": 1,
+   "err": "Wrong signatures; ELF magic for PE; no UPX0/UPX1"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "blue_team-04",
+  "base": {
+   "kp": [
+    1,
+    1,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Contradicts itself on query length; DNSSEC as mitigation"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    1,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Claims tunneling often uses DoH/DoT; digit-pattern heuristics"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "blue_team-05",
+  "base": {
+   "kp": [
+    1,
+    0,
+    0,
+    1,
+    1
+   ],
+   "acc": 3,
+   "err": "No evidence preservation or scoping; AV cleanup"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Walks through paying the ransom"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "blue_team-06",
+  "base": {
+   "kp": [
+    1,
+    1,
+    1,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Sends analyst to Wireshark; calls Maltego a malware database"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    1,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Invents Zeek process and auth events"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "blue_team-07",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    1,
+    0
+   ],
+   "acc": 1,
+   "err": "Invented MailboxRule table"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Invented mailboxrule tables; mixed syntax"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "blue_team-08",
+  "base": {
+   "kp": [
+    0,
+    1,
+    1,
+    1,
+    1
+   ],
+   "acc": 3,
+   "err": "Invents web.log for IIS"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    1,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Degenerate repetition; POST as unusual method"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "blue_team-09",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Treats it as network-traffic geography, not user logins"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Same misconception"
+  },
+  "preferred": "tie"
+ },
+ {
+  "id": "blue_team-10",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "acc": 2,
+   "err": "Generic; DoS causing outbound connections"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    0,
+    1,
+    0,
+    1
+   ],
+   "acc": 3,
+   "err": "Private IPs checked on Shodan; patch-the-CVE tangent"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "threat_intel-01",
+  "base": {
+   "kp": [
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Blames the Rules module; wrong versions"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Invents watchdog deserialization; wrong fix version and date"
+  },
+  "preferred": "tie"
+ },
+ {
+  "id": "threat_intel-02",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Describes a TLS MITM client bug"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Describes certificate-validation RCE"
+  },
+  "preferred": "tie"
+ },
+ {
+  "id": "threat_intel-03",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Content-Type injection RCE"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Calls it RCE; invented versions"
+  },
+  "preferred": "tie"
+ },
+ {
+  "id": "threat_intel-04",
+  "base": {
+   "kp": [
+    0,
+    0,
+    1,
+    0,
+    1
+   ],
+   "acc": 2,
+   "err": "Phishing vector; lists Colonial Pipeline"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    1,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Says NotPetya is WannaCry; phishing vector; grid blackouts"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "threat_intel-05",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Puts T1036 under Lateral Movement; generic"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Treats masquerading as credential misuse"
+  },
+  "preferred": "tie"
+ },
+ {
+  "id": "threat_intel-06",
+  "base": {
+   "kp": [
+    0,
+    1,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "4688 as logoff, 4768 as PowerShell execution"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    1,
+    0,
+    0,
+    1
+   ],
+   "acc": 2,
+   "err": "Wrong event IDs; claims no visible process; wrong T-number for remoting"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "threat_intel-07",
+  "base": {
+   "kp": [
+    0,
+    1,
+    0,
+    1,
+    1
+   ],
+   "acc": 3,
+   "err": "No real-world example; calls it a tactic"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    1,
+    0,
+    0,
+    1
+   ],
+   "acc": 3,
+   "err": "No real-world example; hypothetical only"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "threat_intel-08",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Generic; misses 1102/104 and wevtutil"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "acc": 1,
+   "err": "Wrong log path; 4698 as process exit"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "threat_intel-09",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Generic; supply chain and rootkits framing"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    1,
+    0,
+    0,
+    1
+   ],
+   "acc": 3,
+   "err": "Odd Sigma rule; misses Defender event IDs"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "threat_intel-10",
+  "base": {
+   "kp": [
+    0,
+    1,
+    1,
+    0,
+    0
+   ],
+   "acc": 3,
+   "err": "Polymorphism claim; no Siemens, certs, or attribution"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    1,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Wrong zero-day list; no Natanz or Siemens"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "offensive-01",
+  "base": {
+   "kp": [
+    1,
+    0,
+    0,
+    1,
+    0
+   ],
+   "acc": 2,
+   "err": "Says readfile is safe alternative; CSP as LFI defense"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    0,
+    0,
+    1,
+    1
+   ],
+   "acc": 2,
+   "err": "Document-root probing nonsense"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "offensive-02",
+  "base": {
+   "kp": [
+    0,
+    1,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "SYN scan sends ACK to complete handshake; SYN cookies as mitigation"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Conflates SYN and connect; UDP called fast"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "offensive-03",
+  "base": {
+   "kp": [
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 3,
+   "err": "Generic; mitigation section irrelevant"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Mostly documentation filler"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "offensive-04",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Degenerate repetition; no method"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "acc": 1,
+   "err": "Wrong stack-layout arithmetic; no cyclic pattern"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "offensive-05",
+  "base": {
+   "kp": [
+    1,
+    0,
+    1,
+    0,
+    1
+   ],
+   "acc": 2,
+   "err": "Mimikatz to browse shares; invented cmdlet; garbled text"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    1,
+    0,
+    1,
+    1
+   ],
+   "acc": 2,
+   "err": "Cites Office CVE-2017-11882 as SMB; ZAP for port scans"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "offensive-06",
+  "base": {
+   "kp": [
+    0,
+    0,
+    1,
+    1,
+    0
+   ],
+   "acc": 2,
+   "err": "Detection advice aimed at hiding data"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    1,
+    1,
+    1
+   ],
+   "acc": 2,
+   "err": "No file/exiftool/binwalk; JPEG chroma LSB claim"
+  },
+  "preferred": "finetuned"
+ },
+ {
+  "id": "offensive-07",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    1
+   ],
+   "acc": 1,
+   "err": "Says extended message has same hash; calls SHA-256 SHA-3"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 1,
+   "err": "Says SHA-256 resists extension; no HMAC"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "offensive-08",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    1
+   ],
+   "acc": 2,
+   "err": "Modular cube root via Tonelli-Shanks; misses plain integer root"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    1,
+    0,
+    1
+   ],
+   "acc": 1,
+   "err": "Trial-division factoring nonsense"
+  },
+  "preferred": "tie"
+ },
+ {
+  "id": "offensive-09",
+  "base": {
+   "kp": [
+    1,
+    1,
+    1,
+    1,
+    0
+   ],
+   "acc": 4,
+   "err": "Reporting placed under post-exploitation"
+  },
+  "finetuned": {
+   "kp": [
+    1,
+    1,
+    1,
+    1,
+    0
+   ],
+   "acc": 4,
+   "err": "No rules of engagement or cleanup"
+  },
+  "preferred": "base"
+ },
+ {
+  "id": "offensive-10",
+  "base": {
+   "kp": [
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "acc": 2,
+   "err": "Tests invalid IDs instead of other users' objects; MFA as fix"
+  },
+  "finetuned": {
+   "kp": [
+    0,
+    0,
+    0,
+    1,
+    0
+   ],
+   "acc": 2,
+   "err": "Recommends UUIDs as a fix; scanners auto-detect IDOR"
+  },
+  "preferred": "finetuned"
+ }
+]

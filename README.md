@@ -118,8 +118,29 @@ with the ML stack:
 - A first QLoRA run on the 96-row seed set trained successfully: the model
   picked up the target answer style and structure, but factual recall was
   weak at that data size. This motivated scaling the dataset to 928 rows.
-- Retraining on the 928-row set is in progress. Scores from the evaluation
-  below will be added here.
+- The 928-row run (Colab T4, fp16) was evaluated on 40 held-out questions.
+  **The fine-tune did not beat the base model.** It learned the house style
+  (answers about 22% shorter, consistent detection/mitigation framing) but
+  key-point coverage was flat and factual accuracy dipped slightly:
+
+| Domain | Questions | Key points: base | Key points: fine-tuned | Accuracy (1-5): base | Accuracy (1-5): fine-tuned | Fine-tuned W / T / L |
+|---|---|---|---|---|---|---|
+| education | 10 | 34% | 38% | 2.40 | 2.00 | 2 / 2 / 6 |
+| blue_team | 10 | 35% | 24% | 1.80 | 1.60 | 3 / 2 / 5 |
+| threat_intel | 10 | 18% | 20% | 1.70 | 1.60 | 2 / 4 / 4 |
+| offensive | 10 | 31% | 39% | 2.10 | 1.80 | 5 / 1 / 4 |
+| **Overall** | 40 | 29% | 30% | 2.00 | 1.75 | 12 / 9 / 19 |
+
+  Grading was done blind by Claude using the `scripts/judge.py` rubric, with
+  A/B order shuffled and labels revealed only after all 40 pairs were scored.
+  Raw answers and per-question grades are in [`docs/eval/`](docs/eval/).
+
+- What the numbers say: at 3B parameters both models hallucinate heavily on
+  specifics (CVE root causes, event IDs, tool syntax). Examples from both
+  sides include AS-REP roasting described as a KDC DoS, invented Suricata and
+  KQL syntax, and wrong Drupalgeddon2 versions. 928 synthetic examples taught
+  format, not facts. Next steps are a 7B base, retrieval for CVE/ATT&CK facts,
+  and filtering generated training answers for factual errors.
 
 ### Evaluation
 
