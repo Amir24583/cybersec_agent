@@ -24,3 +24,6 @@ data/.generated_done.txt.bak
 
 # Editor swap files
 *.swp
+
+# RAG corpus: rebuilt by scripts/build_corpus.py
+data/rag/
