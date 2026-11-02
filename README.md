@@ -165,6 +165,12 @@ python scripts/judge.py             # writes outputs/eval/results.md
 The full step-by-step environment guide, including troubleshooting, is in
 [docs/walkthrough.md](docs/walkthrough.md).
 
+### Training in the cloud
+
+[notebooks/train_colab.ipynb](notebooks/train_colab.ipynb) runs training and
+the evaluation on a free Google Colab T4 GPU, then downloads the adapter and
+eval results. `train.py` falls back to fp16 on GPUs without bf16 support.
+
 ## Responsible use
 
 Every example uses a system prompt that scopes the assistant to authorized
