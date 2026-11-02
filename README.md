@@ -118,8 +118,23 @@ with the ML stack:
 - A first QLoRA run on the 96-row seed set trained successfully: the model
   picked up the target answer style and structure, but factual recall was
   weak at that data size. This motivated scaling the dataset to 928 rows.
-- Retraining on the 928-row set and a held-out evaluation of base vs.
-  fine-tuned are in progress. Scores will be added here.
+- Retraining on the 928-row set is in progress. Scores from the evaluation
+  below will be added here.
+
+### Evaluation
+
+`data/eval.jsonl` holds 40 held-out questions, 10 per domain, each with 4 to
+5 reference key points. They were written to avoid the subjects of the
+training questions (for example, different CVEs and ATT&CK techniques), and
+`scripts/decontam.py` checks that no eval question is a near-duplicate of a
+training question.
+
+Both models answer every question with the same system prompt and greedy
+decoding (`eval_generate.py`). Claude Opus 5.5 then grades each pair
+(`scripts/judge.py`): which reference key points each answer covers, a 1-5
+factual accuracy score, and which answer is better. The two answers are shown
+in random order so the judge can't favor a position. Output is a per-domain
+table of key-point coverage, accuracy, and fine-tuned win/tie/loss counts.
 
 ## Quickstart
 
@@ -140,6 +155,11 @@ python scripts/curate.py            # writes data/seed_scaled.jsonl
 
 python train.py                     # adapter saved to outputs/cybersec-lora
 python chat.py                      # chat with the fine-tuned model
+
+python scripts/decontam.py          # eval set must not overlap training data
+python eval_generate.py --model base
+python eval_generate.py --model finetuned
+python scripts/judge.py             # writes outputs/eval/results.md
 ```
 
 The full step-by-step environment guide, including troubleshooting, is in
@@ -157,6 +177,7 @@ without verification.
 ## Roadmap
 
 - [ ] Retrain on the 928-row dataset
-- [ ] Held-out evaluation set per domain; score base vs. fine-tuned
+- [x] Held-out evaluation set and scoring scripts
+- [ ] Score base vs. fine-tuned and publish the results
 - [ ] Merge the adapter, convert to GGUF, and run it locally with Ollama
 - [ ] Try a 7B base model
