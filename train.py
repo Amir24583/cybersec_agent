@@ -6,15 +6,16 @@ LoRA adapters on a 4-bit base. Tuned for an 8 GB GPU; also runs on cloud GPUs
 such as Colab's T4 (see notebooks/train_colab.ipynb).
 """
 import json
+import os
 import torch
 from datasets import Dataset
 from unsloth import FastLanguageModel, is_bfloat16_supported
 from trl import SFTConfig, SFTTrainer
 
 # ---- config -----------------------------------------------------------------
-MODEL = "unsloth/Qwen2.5-3B-Instruct"   # swap to a 7B later if you want
+MODEL = os.environ.get("BASE_MODEL", "unsloth/Qwen2.5-3B-Instruct")   # e.g. BASE_MODEL=unsloth/Qwen2.5-7B-Instruct
 DATA = "data/seed_scaled.jsonl"
-OUT = "outputs/cybersec-lora"
+OUT = os.environ.get("LORA_OUT", "outputs/cybersec-lora")
 MAX_SEQ = 1536
 
 # ---- load 4-bit base + attach LoRA ------------------------------------------

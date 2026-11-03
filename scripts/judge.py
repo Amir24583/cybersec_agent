@@ -9,7 +9,10 @@ outputs/eval/results.json and a summary table to outputs/eval/results.md.
 Prereqs: run eval_generate.py for both models first, and
     export ANTHROPIC_API_KEY=sk-ant-...      # or: ant auth login
 
-Run: python scripts/judge.py
+Run: python scripts/judge.py                                  # finetuned vs base
+     python scripts/judge.py --ref base --cand base_rag        # any two answer files
+Answer files are outputs/eval/<name>.jsonl. Comparing other pairs writes
+results_<cand>_vs_<ref>.json/.md so earlier results are kept.
 """
 import argparse
 import json
@@ -97,35 +100,36 @@ def fit(flags, n):
     return (list(flags) + [False] * n)[:n]
 
 
-def summarize(results):
-    agg = defaultdict(lambda: {"n": 0, "kp": {"base": [0, 0], "finetuned": [0, 0]},
-                               "acc": {"base": 0, "finetuned": 0},
+def summarize(results, ref="base", cand="finetuned"):
+    ms = (ref, cand)
+    agg = defaultdict(lambda: {"n": 0, "kp": {m: [0, 0] for m in ms},
+                               "acc": {m: 0 for m in ms},
                                "win": 0, "tie": 0, "loss": 0})
     for r in results:
         for key in (r["domain"], "all"):
             a = agg[key]
             a["n"] += 1
-            for m in ("base", "finetuned"):
+            for m in ms:
                 kp = r[m]["key_points_covered"]
                 a["kp"][m][0] += sum(kp)
                 a["kp"][m][1] += len(kp)
                 a["acc"][m] += r[m]["accuracy"]
-            a[{"finetuned": "win", "tie": "tie", "base": "loss"}[r["preferred"]]] += 1
+            a[{cand: "win", "tie": "tie", ref: "loss"}[r["preferred"]]] += 1
 
     lines = [
-        "| Domain | Questions | Key points: base | Key points: fine-tuned "
-        "| Accuracy (1-5): base | Accuracy (1-5): fine-tuned | Fine-tuned W / T / L |",
+        f"| Domain | Questions | Key points: {ref} | Key points: {cand} "
+        f"| Accuracy (1-5): {ref} | Accuracy (1-5): {cand} | {cand} W / T / L |",
         "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for key in DOMAINS + ["all"]:
         if key not in agg:
             continue
         a = agg[key]
-        kp = {m: 100 * a["kp"][m][0] / max(a["kp"][m][1], 1) for m in ("base", "finetuned")}
-        acc = {m: a["acc"][m] / a["n"] for m in ("base", "finetuned")}
+        kp = {m: 100 * a["kp"][m][0] / max(a["kp"][m][1], 1) for m in ms}
+        acc = {m: a["acc"][m] / a["n"] for m in ms}
         label = "**All**" if key == "all" else key
-        lines.append(f"| {label} | {a['n']} | {kp['base']:.0f}% | {kp['finetuned']:.0f}% "
-                     f"| {acc['base']:.2f} | {acc['finetuned']:.2f} "
+        lines.append(f"| {label} | {a['n']} | {kp[ref]:.0f}% | {kp[cand]:.0f}% "
+                     f"| {acc[ref]:.2f} | {acc[cand]:.2f} "
                      f"| {a['win']} / {a['tie']} / {a['loss']} |")
     return "\n".join(lines)
 
@@ -134,11 +138,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=0, help="judge only the first N questions")
     ap.add_argument("--seed", type=int, default=42, help="seed for the A/B order")
+    ap.add_argument("--ref", default="base", help="reference answers (outputs/eval/<ref>.jsonl)")
+    ap.add_argument("--cand", default="finetuned", help="candidate answers to compare")
     args = ap.parse_args()
+    ref, cand = args.ref, args.cand
+    if ref == cand:
+        ap.error("--ref and --cand must differ")
+    stem = "results" if (ref, cand) == ("base", "finetuned") else f"results_{cand}_vs_{ref}"
 
     rows = [json.loads(l) for l in open(EVAL) if l.strip()]
     answers = {}
-    for m in ("base", "finetuned"):
+    for m in (ref, cand):
         answers[m] = {o["id"]: o["answer"] for o in map(json.loads, open(f"{OUT_DIR}/{m}.jsonl"))}
     if args.limit:
         rows = rows[: args.limit]
@@ -147,7 +157,7 @@ def main():
     rng = random.Random(args.seed)
     results, skipped = [], []
     for i, row in enumerate(rows, 1):
-        base, ft = answers["base"][row["id"]], answers["finetuned"][row["id"]]
+        base, ft = answers[ref][row["id"]], answers[cand][row["id"]]
         ft_is_a = rng.random() < 0.5
         a, b = (ft, base) if ft_is_a else (base, ft)
         try:
@@ -165,19 +175,20 @@ def main():
         for side in ("A", "B"):
             g[side]["key_points_covered"] = fit(g[side]["key_points_covered"], n)
         ft_side, base_side = ("A", "B") if ft_is_a else ("B", "A")
-        preferred = {"tie": "tie", ft_side: "finetuned", base_side: "base"}[g["preferred"]]
+        preferred = {"tie": "tie", ft_side: cand, base_side: ref}[g["preferred"]]
         results.append({"id": row["id"], "domain": row["domain"],
-                        "base": g[base_side], "finetuned": g[ft_side],
+                        ref: g[base_side], cand: g[ft_side],
                         "preferred": preferred, "reason": g["reason"]})
         print(f"  [{i}/{len(rows)}] {row['id']:16s} preferred: {preferred}")
 
-    with open(f"{OUT_DIR}/results.json", "w") as f:
-        json.dump({"judge": MODEL, "results": results, "skipped": skipped}, f, indent=2)
-    table = summarize(results)
-    with open(f"{OUT_DIR}/results.md", "w") as f:
-        f.write(f"Judge: {MODEL}. Skipped: {len(skipped)}.\n\n{table}\n")
+    with open(f"{OUT_DIR}/{stem}.json", "w") as f:
+        json.dump({"judge": MODEL, "ref": ref, "cand": cand,
+                   "results": results, "skipped": skipped}, f, indent=2)
+    table = summarize(results, ref, cand)
+    with open(f"{OUT_DIR}/{stem}.md", "w") as f:
+        f.write(f"Judge: {MODEL}. {cand} vs {ref}. Skipped: {len(skipped)}.\n\n{table}\n")
     print(f"\n{table}\n\nSkipped: {skipped or 'none'}")
-    print(f"Wrote {OUT_DIR}/results.json and {OUT_DIR}/results.md")
+    print(f"Wrote {OUT_DIR}/{stem}.json and {OUT_DIR}/{stem}.md")
 
 
 if __name__ == "__main__":
